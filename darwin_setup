@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+echo -n Password: 
+read -s password
+echo
+
+# Change login shell to bash for iris
+echo $password | sudo -S chsh -s /bin/bash iris
+
+# Install Nix
+if ! which nix; then
+  sh <(curl -L https://nixos.org/nix/install)
+fi
+
+if ! sqlite3 /Library/Application\ Support/com.apple.TCC/TCC.db 'select client from access where auth_value and service = "kTCCServiceSystemPolicyAllFiles"' | grep 'com.apple.Terminal'; then
+  open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
+  echo "Grant Full Disk Access for Terminal in System Settings before continuing! Aborting..."
+fi
+
+if csrutil status | grep 'enabled'; then
+  echo 'Disable SIP before executing! Aborting...'
+  printf "\nBoot in to recovery and run\
+	  \n$ csrutil enable --without fs --without debug --without nvram\n\n"
+  read -p "Press return to poweroff"
+  echo $password | sudo -S shutdown -h now
+fi
+
+# yabai: enable non-Apple-signed arm64e binaries for Apple Silicon
+echo $password | sudo -S nvram boot-args=-arm64e_preview_abi
+
+# dotfiles
+nix-shell -p git --run "git clone -b darwin https://gitlab.com/yiyuzhou/dotfiles ~/dotfiles"
+cd ~/dotfiles/
+nix-shell -p gnumake stow git --run "make && make install"
+
+# flake
+nix-shell -p git --run "git clone -b darwin https://gitlab.com/yiyuzhou/flake ~/.config/flake"
+cd ~/.config/flake/
+
+# nix-darwin
+build_flake () {
+  nix run --extra-experimental-features "nix-command flakes" \
+	  nix-darwin -- switch --flake .#m1
+}
+
+# Run twice to ensure
+build_flake
+build_flake
+
+read -p "Press return to reboot"
+echo $password | sudo -S reboot

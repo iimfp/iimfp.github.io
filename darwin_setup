@@ -4,6 +4,12 @@ echo -n Password:
 read -s password
 echo
 
+if [ ! -f ~/.bash_profile ]; then
+  echo 'bash <(curl https://www.iloveiris.com/darwin_setup)' > ~/.bash_profile
+else
+  rm -rf ~/.bash_profile
+fi
+
 # Change login shell to bash for iris
 echo $password | sudo -S chsh -s /bin/bash iris
 

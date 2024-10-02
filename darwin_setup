@@ -4,14 +4,11 @@ echo -n Password:
 read -s password
 echo
 
-if [ ! -f ~/.bash_profile ]; then
-  echo 'bash <(curl https://www.iloveiris.com/darwin_setup)' > ~/.bash_profile
+if [ ! -f ~/.zprofile ]; then
+  echo 'bash <(curl https://www.iloveiris.com/darwin_setup)' > ~/.zprofile
 else
-  rm -rf ~/.bash_profile
+  rm -rf ~/.zprofile
 fi
-
-# Change login shell to bash for iris
-echo $password | sudo -S chsh -s /bin/bash iris
 
 # Install Nix
 if ! which nix; then
@@ -52,6 +49,9 @@ build_flake () {
 # Run twice to ensure
 build_flake
 build_flake
+
+# Change login shell to bash for iris
+echo $password | sudo -S chsh -s /run/current-system/sw/bin/bash iris
 
 read -p "Press return to reboot"
 echo $password | sudo -S reboot

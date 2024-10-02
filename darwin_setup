@@ -15,7 +15,7 @@ echo $password | sudo -S chsh -s /bin/bash iris
 
 # Install Nix
 if ! which nix; then
-  sh <(curl -L https://nixos.org/nix/install)
+  curl -L https://nixos.org/nix/install | sh -s -- --yes
 fi
 
 if ! sqlite3 /Library/Application\ Support/com.apple.TCC/TCC.db 'select client from access where auth_value and service = "kTCCServiceSystemPolicyAllFiles"' | grep 'com.apple.Terminal'; then
